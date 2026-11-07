@@ -84,3 +84,6 @@
 "Open the switcher with a shortcut to search" = "ショートカットで切替を開いて検索";
 "Press %@, type to filter, then press Return to switch. Esc cancels." = "%@ を押して入力で絞り込み、Return で切り替えます。Esc でキャンセルします。";
 "This shortcut is already in use. Change it in Shortcuts." = "このショートカットは使用中です。「ショートカット」で変更してください。";
+"Menu bar" = "メニューバー";
+"Hide menu bar icon" = "メニューバーのアイコンを非表示";
+"While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings." = "アイコンが非表示のときは、アプリケーションフォルダまたは Spotlight から OpenContexts をもう一度開くと設定が表示されます。";

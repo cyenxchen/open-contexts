@@ -84,3 +84,6 @@
 "Open the switcher with a shortcut to search" = "Abrir el selector con un atajo para buscar";
 "Press %@, type to filter, then press Return to switch. Esc cancels." = "Pulsa %@, escribe para filtrar y pulsa Retorno para cambiar. Esc cancela.";
 "This shortcut is already in use. Change it in Shortcuts." = "Este atajo ya está en uso. Cámbialo en Atajos.";
+"Menu bar" = "Barra de menús";
+"Hide menu bar icon" = "Ocultar el icono de la barra de menús";
+"While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings." = "Con el icono oculto, vuelve a abrir OpenContexts desde Aplicaciones o Spotlight para ver los ajustes.";

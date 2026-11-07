@@ -54,6 +54,11 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         switchers.values.forEach { $0.close() }
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showSettings()
+        return false
+    }
+
     private func configureShortcuts() {
         shortcuts.configure(allWindows: settings.allWindowsShortcut, currentApp: settings.currentAppShortcut,
                             sidebar: settings.sidebarShortcut, search: settings.activeSearchShortcut)
@@ -410,6 +415,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: L10n.text("Quit OpenContexts", language: settings.language), action: #selector(quit), keyEquivalent: "q").target = self
         item.menu = menu
+        item.isVisible = !settings.hideMenuBarIcon
         statusItem = item
     }
 

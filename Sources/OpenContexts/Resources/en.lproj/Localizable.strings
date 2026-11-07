@@ -84,3 +84,6 @@
 "Open the switcher with a shortcut to search" = "Open the switcher with a shortcut to search";
 "Press %@, type to filter, then press Return to switch. Esc cancels." = "Press %@, type to filter, then press Return to switch. Esc cancels.";
 "This shortcut is already in use. Change it in Shortcuts." = "This shortcut is already in use. Change it in Shortcuts.";
+"Menu bar" = "Menu bar";
+"Hide menu bar icon" = "Hide menu bar icon";
+"While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings." = "While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings.";
