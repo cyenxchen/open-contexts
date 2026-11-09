@@ -257,13 +257,13 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         selectionBeforeSearch = nil
         self.currentAppOnly = currentAppOnly
         currentAppPID = currentAppOnly ? NSWorkspace.shared.frontmostApplication?.processIdentifier : nil
-        switchingResults = WindowSwitcher.filter(availableWindows(currentAppOnly: currentAppOnly, pid: currentAppPID),
-                                                 query: "", allSpaces: settings.showWindowsFromAllDesktops)
+        let start = WindowSwitcher.start(availableWindows(currentAppOnly: currentAppOnly, pid: currentAppPID),
+                                         allSpaces: settings.showWindowsFromAllDesktops,
+                                         focusedID: windowService.focusedWindowID, reverse: reverse)
+        switchingResults = start.results
         switchingWindowCount = switchingResults.count
         guard !switchingResults.isEmpty else { finishSwitcher(activating: nil); return }
-        let firstIsFocused = switchingResults.first?.window.id == windowService.focusedWindowID
-        selectedIndex = reverse ? switchingResults.count - 1
-            : firstIsFocused ? min(1, switchingResults.count - 1) : 0
+        selectedIndex = start.selectedIndex
         switcherAnchorDisplayID = nil
         isSearchSession = searchSession
         if searchSession { startSearchDismissal() }
