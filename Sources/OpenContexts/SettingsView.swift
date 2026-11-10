@@ -453,6 +453,7 @@ struct SettingsView: View {
     @ObservedObject var groupStore: GroupStore
     @ObservedObject var shortcuts: ShortcutController
     @State private var page: SettingsPage = .general
+    @StateObject private var launchAtLogin = LaunchAtLoginController()
 
     private var language: AppLanguage { settings.language }
 
@@ -488,6 +489,10 @@ struct SettingsView: View {
         .onDisappear { shortcuts.cancelRecording() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
             shortcuts.cancelRecording()
+        }
+        .onAppear { launchAtLogin.refresh() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            launchAtLogin.refresh()
         }
     }
 
@@ -546,6 +551,25 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                     if settings.searchShortcutEnabled, settings.searchShortcutHasConflict {
                         Text(L10n.text("This shortcut is already in use. Change it in Shortcuts.", language: language))
+                            .foregroundStyle(.red)
+                    }
+                }
+                .toggleStyle(.checkbox)
+            }
+            settingsRow("Startup") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(L10n.text("Open at login", language: language), isOn: Binding(
+                        get: { launchAtLogin.state.isOn }, set: launchAtLogin.setEnabled
+                    ))
+                    if launchAtLogin.state.needsApproval {
+                        Text(L10n.text("Allow OpenContexts in System Settings to finish turning this on.", language: language))
+                            .foregroundStyle(.secondary)
+                        Button(L10n.text("Open System Settings", language: language)) {
+                            launchAtLogin.openSystemSettings()
+                        }
+                    }
+                    if let error = launchAtLogin.state.errorDescription {
+                        Text(L10n.format("Could not change the login setting: %@", error, language: language))
                             .foregroundStyle(.red)
                     }
                 }

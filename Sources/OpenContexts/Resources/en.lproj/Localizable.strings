@@ -87,3 +87,8 @@
 "Menu bar" = "Menu bar";
 "Hide menu bar icon" = "Hide menu bar icon";
 "While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings." = "While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings.";
+"Startup" = "Startup";
+"Open at login" = "Open at login";
+"Allow OpenContexts in System Settings to finish turning this on." = "Allow OpenContexts in System Settings to finish turning this on.";
+"Open System Settings" = "Open System Settings";
+"Could not change the login setting: %@" = "Could not change the login setting: %@";

@@ -87,3 +87,8 @@
 "Menu bar" = "菜单栏";
 "Hide menu bar icon" = "隐藏菜单栏图标";
 "While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings." = "图标隐藏时，从“应用程序”文件夹或聚焦搜索再次打开 OpenContexts 即可显示设置。";
+"Startup" = "启动";
+"Open at login" = "登录时自动打开";
+"Allow OpenContexts in System Settings to finish turning this on." = "请在系统设置中允许 OpenContexts，开启后才会生效。";
+"Open System Settings" = "打开系统设置";
+"Could not change the login setting: %@" = "无法更改登录时打开设置：%@";

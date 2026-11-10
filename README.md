@@ -43,6 +43,7 @@ The window switcher displays windows in most recently used order. You can contin
 | Keyboard switcher | Defaults to `⌘Tab` for all windows and `Command + backtick` for the current app; both shortcuts are customizable in Settings; supports Shift for reverse switching, arrow keys, `Esc`, and releasing a shortcut modifier to confirm |
 | All desktops | Enable Settings → General → Show windows from all desktops to group the switcher by desktop. Current desktops appear first in recent order; other desktops follow in desktop order, with windows sorted by app and title |
 | Switcher display | Choose in Settings → General whether the window switcher appears on all displays, only on the primary display, on the display with the focused window, or on the display under the pointer. All displays is the default |
+| Open at login | Turn on Settings → General → Open at login to start OpenContexts when you log in. If macOS asks for approval, allow it in System Settings → General → Login Items |
 | Menu bar icon | Hide the icon in Settings → General. While it is hidden, open OpenContexts again from Applications or Spotlight to show Settings |
 | Sidebar shortcut | Press `⌃⌘B` to keep the sidebar open on the screen under the pointer, even when set to Off; move the pointer into the sidebar and away, press again, or press `Esc` to return to its visibility setting. Customize or disable it in Settings → Shortcuts |
 | Window search | Search by app name or window title: hold the switcher modifier, type, then release to switch; matches are highlighted in yellow |

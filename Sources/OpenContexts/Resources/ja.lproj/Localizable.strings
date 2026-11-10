@@ -87,3 +87,8 @@
 "Menu bar" = "メニューバー";
 "Hide menu bar icon" = "メニューバーのアイコンを非表示";
 "While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings." = "アイコンが非表示のときは、アプリケーションフォルダまたは Spotlight から OpenContexts をもう一度開くと設定が表示されます。";
+"Startup" = "起動";
+"Open at login" = "ログイン時に開く";
+"Allow OpenContexts in System Settings to finish turning this on." = "設定を完了するには、システム設定で OpenContexts を許可してください。";
+"Open System Settings" = "システム設定を開く";
+"Could not change the login setting: %@" = "ログイン時の起動設定を変更できませんでした: %@";

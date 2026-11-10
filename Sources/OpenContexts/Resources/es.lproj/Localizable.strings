@@ -87,3 +87,8 @@
 "Menu bar" = "Barra de menús";
 "Hide menu bar icon" = "Ocultar el icono de la barra de menús";
 "While the icon is hidden, open OpenContexts again from Applications or Spotlight to show Settings." = "Con el icono oculto, vuelve a abrir OpenContexts desde Aplicaciones o Spotlight para ver los ajustes.";
+"Startup" = "Inicio";
+"Open at login" = "Abrir al iniciar sesión";
+"Allow OpenContexts in System Settings to finish turning this on." = "Permite OpenContexts en Ajustes del Sistema para terminar de activarlo.";
+"Open System Settings" = "Abrir Ajustes del Sistema";
+"Could not change the login setting: %@" = "No se pudo cambiar el ajuste de inicio de sesión: %@";
