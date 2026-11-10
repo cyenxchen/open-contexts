@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import OpenContextsCore
+import OSLog
 import Sparkle
 import SwiftUI
 
@@ -34,6 +35,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var searchDismissMonitors: [Any] = []
     private var searchDismissObserver: NSObjectProtocol?
     private var searchSessionID: UUID?
+    private var switcherVisibilityCheck: DispatchWorkItem?
+    private let logger = Logger(subsystem: "OpenContexts", category: "switcher")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -136,9 +139,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private func rebuildPanels() {
         sidebars.values.forEach { $0.close() }
-        switchers.values.forEach { $0.close() }
         sidebars = [:]
-        switchers = [:]
 
         for screen in NSScreen.screens {
             let id = Self.displayID(for: screen)
@@ -160,15 +161,23 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 onRenameGroup: { [weak self] id, name in self?.groupStore.renameGroup(id: id, name: name) },
                 onDeleteGroup: { [weak self] in self?.groupStore.deleteGroup(id: $0) }
             )
-            switchers[id] = SwitcherPanel(
+        }
+        rebuildSwitchers()
+        updateSidebars()
+        if currentAppOnly != nil {
+            showSwitchers()
+        }
+    }
+
+    private func rebuildSwitchers() {
+        switchers.values.forEach { $0.close() }
+        switchers = [:]
+        for screen in NSScreen.screens {
+            switchers[Self.displayID(for: screen)] = SwitcherPanel(
                 screen: screen,
                 onActivate: { [weak self] id in self?.finishSwitcher(activating: id) },
                 onSelect: { [weak self] id in self?.selectSwitcherWindow(id: id) }
             )
-        }
-        updateSidebars()
-        if currentAppOnly != nil {
-            showSwitchers()
         }
     }
 
@@ -268,6 +277,34 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         isSearchSession = searchSession
         if searchSession { startSearchDismissal() }
         showSwitchers()
+        scheduleSwitcherVisibilityCheck(SwitcherVisibilityGuard(), after: 0.15)
+    }
+
+    /// The session captures the keyboard, so it must not outlive a panel that never reached the screen.
+    private func scheduleSwitcherVisibilityCheck(_ visibility: SwitcherVisibilityGuard, after delay: TimeInterval) {
+        switcherVisibilityCheck?.cancel()
+        let check = DispatchWorkItem { [weak self] in self?.checkSwitcherVisibility(visibility) }
+        switcherVisibilityCheck = check
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: check)
+    }
+
+    private func checkSwitcherVisibility(_ visibility: SwitcherVisibilityGuard) {
+        switcherVisibilityCheck = nil
+        guard currentAppOnly != nil else { return }
+        let panels = switcherTargetDisplayIDs().compactMap { switchers[$0] }
+        var visibility = visibility
+        switch visibility.resolve(onScreen: panels.filter(\.isOnScreen).count, expected: panels.count) {
+        case .keep:
+            break
+        case .rebuildAndRetry:
+            logger.notice("Switcher panel was ordered in but is not on screen; replacing it")
+            rebuildSwitchers()
+            showSwitchers()
+            scheduleSwitcherVisibilityCheck(visibility, after: 0.25)
+        case .cancel:
+            logger.error("Replacement switcher panel is not on screen either; ending the session")
+            finishSwitcher(activating: nil)
+        }
     }
 
     private func startSearchDismissal() {
@@ -384,6 +421,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func finishSwitcher(activating id: String?) {
+        switcherVisibilityCheck?.cancel()
+        switcherVisibilityCheck = nil
         stopSearchDismissal()
         isSearchSession = false
         shortcuts.resetState()

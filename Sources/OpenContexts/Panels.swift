@@ -1366,6 +1366,17 @@ final class SwitcherPanel: NSPanel {
         orderOut(nil)
     }
 
+    /// Whether the window server shows the panel on the current Space.
+    ///
+    /// `isVisible` only says the panel was ordered in. The window server can keep an ordered-in
+    /// panel off every Space, and it reports the new state a moment after `orderFrontRegardless()`.
+    var isOnScreen: Bool {
+        guard isVisible, windowNumber > 0,
+              let info = CGWindowListCopyWindowInfo([.optionIncludingWindow], CGWindowID(windowNumber))
+                as? [[String: Any]] else { return false }
+        return info.first?[kCGWindowIsOnscreen as String] as? Bool ?? false
+    }
+
     private func updateSearchCaret(focused: Bool, empty: Bool) {
         searchCaretLeading?.isActive = false
         searchCaretTrailing?.isActive = false
@@ -2639,6 +2650,13 @@ enum PanelSmokeCheck {
         let initialIndex = switcherWindows.count - 1
         switcher.show(results: switcherResults, selectedIndex: initialIndex)
         switcher.contentView?.layoutSubtreeIfNeeded()
+        // The window server reports a newly ordered panel a moment later.
+        RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+        guard switcher.isOnScreen else {
+            switcher.close()
+            sidebar.close()
+            return fail("shown switcher must be reported on screen")
+        }
         guard !switcher.smokeSearchCaret.visible, !switcher.smokeSearchCaret.blinking else {
             switcher.close()
             sidebar.close()
