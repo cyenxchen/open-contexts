@@ -1,0 +1,2 @@
+--swiftversion 5.9
+--rules consecutiveBlankLines,duplicateImports,linebreakAtEndOfFile,redundantBreak,redundantNilInit,redundantReturn,redundantVoidReturnType,trailingSpace
