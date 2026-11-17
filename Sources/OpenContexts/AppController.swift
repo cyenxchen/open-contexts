@@ -347,6 +347,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         dismissSidebar()
         searchQuery = ""
         selectionBeforeSearch = nil
+        windowService.syncFocusWithFrontmostApplication()
         self.currentAppOnly = currentAppOnly
         currentAppPID = currentAppOnly ? NSWorkspace.shared.frontmostApplication?.processIdentifier : nil
         let windows = switcherWindows(currentAppOnly: currentAppOnly)

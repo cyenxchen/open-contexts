@@ -15,6 +15,16 @@ public struct RecentWindowOrder: Sendable {
 
     public init() {}
 
+    /// Focus is only read by periodic scans, so an app activated outside the switcher can still be recorded as
+    /// unfocused. A window of an app that is no longer frontmost cannot be focused: use the frontmost app's most
+    /// recent window instead, or none when its windows are not known yet. `windows` is in most-recent-first order.
+    public static func focusedID(observed: String?, frontmostProcessID: Int32?, windows: [WindowInfo]) -> String? {
+        guard let observed, let frontmostProcessID,
+              let observedWindow = windows.first(where: { $0.id == observed }),
+              observedWindow.processID != frontmostProcessID else { return observed }
+        return windows.first { $0.processID == frontmostProcessID }?.id
+    }
+
     /// Drops closed windows, appends new ones in `windowIDs` order and moves the focused window to the front.
     public mutating func update(windowIDs: [String], focusedID observed: String?, now: TimeInterval) {
         if activationID != nil, let settleDeadline, observed == activationID || now >= settleDeadline {

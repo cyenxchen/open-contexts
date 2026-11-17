@@ -54,3 +54,43 @@ final class RecentWindowOrderTests: XCTestCase {
         XCTAssertEqual(order.focusedID, "A")
     }
 }
+
+final class FrontmostFocusTests: XCTestCase {
+    private func window(_ id: String, pid: Int32) -> WindowInfo {
+        WindowInfo(id: id, appID: "app\(pid)", appName: "App \(pid)", title: id, processID: pid)
+    }
+
+    /// Switched A → B with the switcher, then opened C outside it before a scan noticed.
+    private func staleOrder() -> (order: RecentWindowOrder, windows: [WindowInfo]) {
+        let windows = [window("A", pid: 1), window("B", pid: 2), window("C", pid: 3)]
+        var order = RecentWindowOrder()
+        order.update(windowIDs: windows.map(\.id), focusedID: "A", now: 0)
+        order.update(windowIDs: windows.map(\.id), focusedID: "B", now: 1)
+        return (order, order.ids.compactMap { id in windows.first { $0.id == id } })
+    }
+
+    func testQuickSwitchFromAppActivatedOutsideSwitcherReturnsToPreviousApp() {
+        var (order, windows) = staleOrder()
+        XCTAssertEqual(order.ids, ["B", "A", "C"])
+        let focus = RecentWindowOrder.focusedID(observed: "B", frontmostProcessID: 3, windows: windows)
+        order.update(windowIDs: order.ids, focusedID: focus, now: 2)
+        let ordered = order.ids.compactMap { id in windows.first { $0.id == id } }
+        let start = WindowSwitcher.start(ordered, allSpaces: false, focusedID: order.focusedID, reverse: false)
+        XCTAssertEqual(start.results[start.selectedIndex].window.id, "B")
+    }
+
+    func testQuickSwitchFromAppWithoutKnownWindowsReturnsToPreviousApp() {
+        let (order, windows) = staleOrder()
+        let focus = RecentWindowOrder.focusedID(observed: "B", frontmostProcessID: 4, windows: windows)
+        let start = WindowSwitcher.start(windows, allSpaces: false, focusedID: focus, reverse: false)
+        XCTAssertEqual(order.ids, ["B", "A", "C"])
+        XCTAssertEqual(start.results[start.selectedIndex].window.id, "B")
+    }
+
+    func testObservedFocusIsKeptWhenItBelongsToFrontmostAppOrFrontmostIsUnknown() {
+        let windows = [window("B1", pid: 2), window("B2", pid: 2), window("A", pid: 1)]
+        XCTAssertEqual(RecentWindowOrder.focusedID(observed: "B2", frontmostProcessID: 2, windows: windows), "B2")
+        XCTAssertEqual(RecentWindowOrder.focusedID(observed: "A", frontmostProcessID: nil, windows: windows), "A")
+        XCTAssertNil(RecentWindowOrder.focusedID(observed: nil, frontmostProcessID: 2, windows: windows))
+    }
+}

@@ -51,6 +51,8 @@ final class WindowService: ObservableObject {
         let badgeReads: [String: DockBadgeRead]?
         var discoveries: [pid_t: WindowSpaces.DiscoveryState] = [:]
         var spaceSnapshot: WindowSpaces.Snapshot?
+        /// The app `focusedID` was read from.
+        var frontmostPID: pid_t?
     }
 
     private enum AttributeRead<Value> {
@@ -70,6 +72,7 @@ final class WindowService: ObservableObject {
     private var externalFocusedID: String?
     private var recentOrder = RecentWindowOrder()
     private var timer: Timer?
+    private var activationObserver: NSObjectProtocol?
     private var scanInFlight = false
     private var activationTask: Task<Void, Never>?
     private var activationRequest: ActivationRequest?
@@ -92,12 +95,41 @@ final class WindowService: ObservableObject {
         }
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] notification in
+            // `frontmostApplication` can still name the previous app while this notification is delivered.
+            let pid = (notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?
+                .processIdentifier
+            Task { @MainActor in
+                self?.syncFocusWithFrontmostApplication(pid)
+                self?.refresh()
+            }
+        }
     }
 
     func stop() {
         cancelActivation()
         timer?.invalidate()
         timer = nil
+        if let activationObserver { NSWorkspace.shared.notificationCenter.removeObserver(activationObserver) }
+        activationObserver = nil
+    }
+
+    /// Scans notice focus changes made outside the switcher late; don't let the switcher start from a window
+    /// whose app is no longer frontmost.
+    func syncFocusWithFrontmostApplication(_ frontmostPID: pid_t? = nil) {
+        let focused = Self.frontmostFocus(observed: externalFocusedID, windows: windows, frontmostPID: frontmostPID)
+        guard focused != externalFocusedID else { return }
+        externalFocusedID = focused
+        publishWindows()
+    }
+
+    private static func frontmostFocus(observed: String?, windows: [WindowInfo],
+                                       frontmostPID: pid_t? = nil) -> String? {
+        guard let pid = frontmostPID ?? NSWorkspace.shared.frontmostApplication?.processIdentifier,
+              pid != ProcessInfo.processInfo.processIdentifier else { return observed }
+        return RecentWindowOrder.focusedID(observed: observed, frontmostProcessID: pid, windows: windows)
     }
 
     func requestAccessibility() {
@@ -170,7 +202,15 @@ final class WindowService: ObservableObject {
         var orderedIDs = tracked.map(\.id).filter(discoveredIDs.contains)
         orderedIDs.append(contentsOf: result.windows.map(\.id).filter { !orderedIDs.contains($0) })
 
-        externalFocusedID = result.focusedID
+        if let scannedPID = result.frontmostPID,
+           scannedPID != NSWorkspace.shared.frontmostApplication?.processIdentifier {
+            let publishedIDs = Set(windows.map(\.id))
+            let recentFirst = windows.filter { discoveredIDs.contains($0.id) }
+                + result.windows.map(\.info).filter { !publishedIDs.contains($0.id) }
+            externalFocusedID = Self.frontmostFocus(observed: result.focusedID, windows: recentFirst)
+        } else {
+            externalFocusedID = result.focusedID
+        }
         discoveries = result.discoveries
         spaceSnapshot = result.spaceSnapshot
         if let externalFocusedID, let index = orderedIDs.firstIndex(of: externalFocusedID), index != 0 {
@@ -842,7 +882,8 @@ final class WindowService: ObservableObject {
             activeAppIDs: Set(applications.map(\.appID)),
             badgeReads: badgeReads,
             discoveries: discoveryState,
-            spaceSnapshot: topology
+            spaceSnapshot: topology,
+            frontmostPID: frontmostPID
         )
     }
 
